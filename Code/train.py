@@ -6,7 +6,7 @@ from roipoly import roipoly
 import pylab as pl
 
 # set data path
-path_video = "/home/arpitdec5/Desktop/color_segmentation_using_gmm_and_em/data/detectbuoy.avi"
+path_video = "/mnt/c/Users/shant/Underwater_Color_Segmentation_GMM_EM_Algorithm/data/detectbuoy.avi"
 
 # define constants
 cap = cv2.VideoCapture(path_video)
@@ -18,8 +18,6 @@ while(cap.isOpened()):
 
     if(ret):
         image1 = frame.copy()
-        image2 = frame.copy()
-        image3 = frame.copy()
 
       	# draw polygon on first buoy
         pl.imshow(image1, interpolation='nearest', cmap="Greys")
@@ -33,10 +31,17 @@ while(cap.isOpened()):
 
         # save first buoy image
         points = np.array(ROI1.get_points(image1.copy()))
-        rect = cv2.boundingRect(points)
-        x, y, w, h = rect
-        cropped = image1[y:y+h, x:x+w].copy()
-        cv2.imwrite("data/buoy2/buoy" + str(count) + ".png", cropped)
+        (x,y), radius = cv2.minEnclosingCircle(points)
+        center = (int(x),int(y))
+        radius = int(radius)
+
+        rectX = (center[0] - radius)
+        rectY = (center[1] - radius)
+
+        cropped = image1[rectY:rectY + 2*radius, rectX:rectX + 2*radius].copy()
+
+        cv2.imwrite("/mnt/c/Users/shant/Underwater_Color_Segmentation_GMM_EM_Algorithm/data/buoy2/buoy" + str(count) + ".png", cropped)
+        
         #cv2.imshow("Image", cropped)
         #cv2.waitKey(0)
 
