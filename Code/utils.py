@@ -3,7 +3,6 @@ import numpy as np
 from matplotlib import pyplot as plt
 import cv2
 
-# function to plot the average color histogram of image
 def plot_hist(image):
     # loop over the image channels
     chans = cv2.split(image)
