@@ -16,11 +16,11 @@ def plot_hist(image):
         plt.xlim([0, 256])
 
 # initialise step of em algorithm
-def initialise(n, d, k):
+def initialise_step(n, d, k):
     weights_gaussian = np.zeros(k)
-    mean_gaussian = np.zeros(k, d)
-    covariance_matrix_gaussian = np.zeros(k, d, d)
-    probability_values = np.zeros(n, k)
+    mean_gaussian = np.zeros((k, d))
+    covariance_matrix_gaussian = np.zeros((k, d, d))
+    probability_values = np.zeros((n, k))
     
     # randomly assign probability values
     for index in range(0, n):
@@ -30,14 +30,14 @@ def initialise(n, d, k):
     return (weights_gaussian, mean_gaussian, covariance_matrix_gaussian, probability_values)
     
 # gaussian estimation for expectation step
-# reference: https://towardsdatascience.com/an-intuitive-guide-to-expected-maximation-em-algorithm-e1eb93648ce9
-def gaussian_estimation(data_point, mean, sig, d):
-    data_point_mean = data_point - mean
-    sig_inv = np.linalg.inv(sig)
-    in_exp = np.exp(-1 * 0.5 * np.matmul(np.matmul(data_point_mean, sig_inv), data_point_mean.T))
-    a = np.power(2 * np.pi, d) * np.linalg.det(sig)
-    out_exp= 1 / np.sqrt(a)
-    return (in_exp * out_exp)
+def gaussian_estimation(data_point, mean, covariance, dimension):
+    determinant_covariance = np.linalg.det(covariance)
+    determinant_covariance_root = np.sqrt(determinant_covariance)
+    covariance_inverse = np.linalg.inv(covariance)
+    gaussian_pi_coeff = 1 / np.power((2 * np.pi), (dimension / 2))
+    data_mean_diff = (data_point - mean)
+    data_mean_diff_transpose = data_mean_diff.T     
+    return (gaussian_pi_coeff) * (determinant_covariance_root) * np.exp(-0.5 * np.matmul(np.matmul(data_mean_diff_transpose, covariance_inverse), data_mean_diff))
 
 # e-step of the algorithm
 # reference: https://towardsdatascience.com/an-intuitive-guide-to-expected-maximation-em-algorithm-e1eb93648ce9
