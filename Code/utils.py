@@ -3,6 +3,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import cv2
 
+# plot histogram
 def plot_hist(image):
     # loop over the image channels
     chans = cv2.split(image)
@@ -17,6 +18,19 @@ def plot_hist(image):
 
 # initialise step of em algorithm
 def initialise_step(n, d, k):
+    """
+    Inputs:
+    n - the number of data-points
+    d - dimension of gaussian
+    k - number of gaussians
+    
+    Outputs:
+    weights_gaussian - weight of gaussians of size (k)
+    mean_gaussian - mean of gaussians of size (k x d)
+    covariance_matrix_gaussian - covariance of gaussians of size (k x d x d)
+    probability_values - probability of the datapoint being in a gaussian of size (n x k)
+    """
+    
     weights_gaussian = np.zeros(k)
     mean_gaussian = np.zeros((k, d))
     covariance_matrix_gaussian = np.zeros((k, d, d))
@@ -32,6 +46,17 @@ def initialise_step(n, d, k):
 
 # gaussian estimation for expectation step
 def gaussian_estimation(data_point, mean, covariance, dimension):
+    """
+    Inputs:
+    data_point - data point of the gaussian (1 x d)
+    mean - mean of gaussian of size (1 x d)
+    covariance - covariance of gaussian of size (1 x d x d)
+    dimension - dimension of the gaussian
+    
+    Outputs:
+    value of the gaussian
+    """
+    
     determinant_covariance = np.linalg.det(covariance)
     determinant_covariance_root = np.sqrt(determinant_covariance)
     covariance_inverse = np.linalg.inv(covariance)
@@ -44,8 +69,28 @@ def gaussian_estimation(data_point, mean, covariance, dimension):
 # e-step of the algorithm
 # reference: https://towardsdatascience.com/an-intuitive-guide-to-expected-maximation-em-algorithm-e1eb93648ce9
 def expectation_step(n, d, k, data, weights_gaussian, mean_gaussian, covariance_matrix_gaussian, probability_values):
+    """
+    Inputs:
+    n - the number of data-points
+    d - dimension of gaussian
+    k - number of gaussians
+    data - data to be trained on of size (n x d)
+    weights_gaussian - weight of gaussians of size (k)
+    mean_gaussian - mean of gaussians of size (k x d)
+    covariance_matrix_gaussian - covariance of gaussians of size (k x d x d)
+    probability_values - probability of the datapoint being in a gaussian of size (n x k)
+    
+    Outputs:
+    probabilities - probability array of size (n x k)
+    """
+    
+    # create empty array of list of probabilities
     probabilities = []
+    
+    # iterate through each item
     for j in range(0, n):
+        
+        # calculate probability of a point being in the k-gaussians
         probability_x = 0.0
         for i in range(0, k):
             probability_x = probability_x + gaussian_estimation(data[j], mean_gaussian[i], covariance_matrix_gaussian[i] * weights_gaussian[i], d)
@@ -53,12 +98,23 @@ def expectation_step(n, d, k, data, weights_gaussian, mean_gaussian, covariance_
         for i in range(k):
             val = gaussian_estimation(data[j], mean_gaussian[i], covariance_matrix_gaussian[i] * weights_gaussian[i], d) / probability_x
             probability_x_temp.append(val)
+        
+        # append probabilities of a point being in k-gaussians of size (1 x k)
         probabilities.append(probability_x_temp)
     return np.array(probabilities)
 
 
 # update weights, maximization step
 def update_weights(probabilities, k):
+    """
+    Inputs:
+    k - number of gaussians
+    probability - probability of the datapoint being in a gaussian of size (n x k)
+    
+    Outputs:
+    updated_weights - weights of the gaussian of size (k)
+    """
+    
     probabilities = np.array(probabilities)
     updated_weights = []
     for i in range(0, k):
@@ -69,6 +125,16 @@ def update_weights(probabilities, k):
 
 # update mean, maximization step
 def update_mean(data, probabilities, k):
+    """
+    Inputs:
+    k - number of gaussians
+    data - data to be trained on of size (n x d)
+    probability_values - probability of the datapoint being in a gaussian of size (n x k)
+    
+    Outputs:
+    updated_mean - mean of gaussians of size (k x d)
+    """
+    
     probabilities = np.array(probabilities)
     data = np.array(data)
     updated_weights = []
@@ -92,6 +158,20 @@ def maximization_step(n, d, k, data, weights_gaussian, mean_gaussian, covariance
 
 # run e-m algorithm
 def run_expectation_maximization_algorithm(n, d, k, iterations, data):
+    """
+    Inputs:
+    n - the number of data-points
+    d - dimension of gaussian
+    k - number of gaussians
+    iterations - number of iterations of the algorithm
+    data - data to be trained on of size (n x d)
+    
+    Outputs:
+    weights_gaussian - weight of gaussians of size (k)
+    mean_gaussian - mean of gaussians of size (k x d)
+    covariance_matrix_gaussian - covariance of gaussians of size (k x d x d)
+    """
+
     # initialise step
     (weights_gaussian, mean_gaussian, covariance_matrix_gaussian, probability_values) = initialise_step(n, d, k)
     
