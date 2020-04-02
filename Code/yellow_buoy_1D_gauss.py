@@ -42,7 +42,7 @@ training_data2 = training_data2[:25000, :]
 training_data = np.vstack((training_data1, training_data2))
 
 # get the weights, mean and variances of gaussian
-(weights_gaussian, mean_gaussian, covariance_matrix_gaussian) = run_expectation_maximization_algorithm(training_data.shape[0], 1, 2, 50, training_data)
+(weights_gaussian, mean_gaussian, covariance_matrix_gaussian) = run_expectation_maximization_algorithm(training_data.shape[0], 1, 2, 30, training_data)
 
 print(weights_gaussian)
 print(mean_gaussian)

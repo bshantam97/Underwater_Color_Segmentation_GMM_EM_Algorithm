@@ -36,7 +36,7 @@ import scipy
 def initialise_step(n, d, k):
     """
     Inputs:
-    n - number of data-points
+    n - number of datapoints
     d - dimension of the gaussian
     k - number of the gaussians
     
@@ -47,12 +47,19 @@ def initialise_step(n, d, k):
     probability_values - probability of the datapoint being in the k-gaussians, size (n x k)
     """
     
+    # initialise weights
     weights_gaussian = np.zeros(k)
-    mean_gaussian = np.zeros((k, d))
-    covariance_matrix_gaussian = np.zeros((k, d, d))
-    probability_values = np.zeros((n, k))
+    for index in range(0, k):
+        weights_gaussian[index] = (1.0 / k)
     
-    # randomly assign probability values
+    # initialise mean
+    mean_gaussian = np.zeros((k, d))
+    
+    # initialise covariance
+    covariance_matrix_gaussian = np.zeros((k, d, d))
+    
+    # randomly initialise probability
+    probability_values = np.zeros((n, k))
     for index in range(0, n):
         probability_values[index][np.random.randint(0, k)] = 1
         
@@ -80,6 +87,29 @@ def gaussian_estimation(data_point, mean, covariance, dimension):
     data_mean_diff = (data_point - mean)
     data_mean_diff_transpose = data_mean_diff.T     
     return (gaussian_pi_coeff) * (determinant_covariance_root) * np.exp(-0.5 * np.matmul(np.matmul(data_mean_diff, covariance_inverse), data_mean_diff_transpose))
+
+
+# gaussian estimation for n-points
+def gaussian_estimation_array(data_point, mean, covariance, dimension):
+    """
+    Inputs:
+    data_point - data point of the gaussian, size (n x d)
+    mean - mean of the gaussian, size (1 x d)
+    covariance - covariance of the gaussian, size (1 x d x d)
+    dimension - dimension of the gaussian
+    
+    Outputs:
+    value of the gaussian, size (n x d)
+    """
+    
+    determinant_covariance = np.linalg.det(covariance)
+    determinant_covariance_root = np.sqrt(determinant_covariance)
+    covariance_inverse = np.linalg.inv(covariance)
+    gaussian_pi_coeff = 1.0 / np.power((2 * np.pi), (dimension / 2))
+    data_mean_diff = (data_point - mean)
+    data_mean_diff_transpose = data_mean_diff.T 
+    val = (gaussian_pi_coeff) * (determinant_covariance_root) * np.exp(-0.5 * np.sum(np.multiply(data_mean_diff * covariance_inverse, data_mean_diff), axis=1))
+    return np.reshape(val, (data_point.shape[0], data_point.shape[1]))
 
 
 # e-step of the algorithm
@@ -124,8 +154,8 @@ def expectation_step(n, d, k, data, weights_gaussian, mean_gaussian, covariance_
 def update_weights(probabilities, k):
     """
     Inputs:
+    probabilities - probability of the datapoint being in the k-gaussians, size (n x k)
     k - number of gaussians
-    probability - probability of the datapoint being in the k-gaussians, size (n x k)
     
     Outputs:
     updated_weights - weights of the k-gaussians, size (k)
@@ -144,7 +174,7 @@ def update_mean(data, probabilities, k):
     """
     Inputs:
     data - training data, size (n x d)
-    probability - probability of the datapoints being in k-gaussians, size (n x k)
+    probabilities - probability of the datapoints being in k-gaussians, size (n x k)
     k - number of the gaussians
     
     Outputs:
@@ -165,15 +195,15 @@ def update_mean(data, probabilities, k):
 def update_covariance(data, probabilities_values, mean_gaussian, k, d, n):
     """
     Inputs:
-    data - data to be trained on of size (n x d)
+    data - training data, size (n x d)
     probability_values - probability of the datapoint being in k-gaussians, size (n x k)
     mean_gaussian - mean of the k-gaussians, size (k x d)
-    k - number of gaussians
+    k - number of the gaussians
     d - dimension of the gaussian
     n - number of data-points
     
     Outputs:
-    probabilities - probability array, size (n x k)
+    k_array - probability array, size (n x k)
     """
     
     probabilities_values = np.array(probabilities_values)
@@ -219,7 +249,6 @@ def maximization_step(n, d, k, data, weights_gaussian, mean_gaussian, covariance
     u_mean_gaussian - mean of the gaussians, size (k x d)
     u_covariance_matrix_gaussian - covariance of the gaussians, size (k x d x d)
     """
-    
     u_weights = update_weights(probability_values, k)
     u_mean_gaussian = update_mean(data, probability_values, k)
     u_covariance_matrix_gaussian = update_covariance(data, probability_values, mean_gaussian, k, d, n)
@@ -243,7 +272,7 @@ def run_expectation_maximization_algorithm(n, d, k, iterations, data):
     """
     
     # initialise step
-    (weights_gaussian, mean_gaussian, covariance_matrix_gaussian, probability_values) = initialise_step(n, d, k)
+    (weights_gaussian, mean_gaussian, covariance_matrix_gaussian, probability_values) = initialise_step(n, d, k, data)
     
     # run for fixed iterations
     for i in range(0, iterations):

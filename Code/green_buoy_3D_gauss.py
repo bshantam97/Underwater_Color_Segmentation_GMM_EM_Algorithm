@@ -36,10 +36,10 @@ if(len(args) > 1):
 
 # get training data
 training_data = get_training_data(file_path, 1, 1, 1)
-training_data = training_data[:50000, :]
+training_data = training_data[:60000, :]
 
 # get the weights, mean and variances of gaussian
-(weights_gaussian, mean_gaussian, covariance_matrix_gaussian) = run_expectation_maximization_algorithm(training_data.shape[0], 3, 6, 50, training_data)
+(weights_gaussian, mean_gaussian, covariance_matrix_gaussian) = run_expectation_maximization_algorithm(training_data.shape[0], 3, 6, 30, training_data)
 
 print(weights_gaussian)
 print(mean_gaussian)
