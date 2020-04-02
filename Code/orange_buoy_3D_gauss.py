@@ -30,17 +30,58 @@ import sys
 
 # set data path
 args = sys.argv
+video_path = ""
 file_path = ""
-if(len(args) > 1):
-    file_path = args[1]
+if(len(args) > 2):
+    video_path = args[1]
+    file_path = args[2]
 
 # get training data
 training_data = get_training_data(file_path, 1, 1, 1)
-training_data = training_data[:60000, :]
+training_data = training_data[:20000, :]
 
 # get the weights, mean and variances of gaussian
-(weights_gaussian, mean_gaussian, covariance_matrix_gaussian) = run_expectation_maximization_algorithm(training_data.shape[0], 3, 6, 30, training_data)
+(weights_gaussian, mean_gaussian, covariance_matrix_gaussian) = run_expectation_maximization_algorithm(training_data.shape[0], 3, 6, 10, training_data)
 
 print(weights_gaussian)
 print(mean_gaussian)
 print(covariance_matrix_gaussian)
+
+# code for segmenting the buoy
+cap = cv2.VideoCapture(video_path)
+fourcc = cv2.VideoWriter_fourcc(*'XVID')
+out = cv2.VideoWriter('orange_buoy_3D_gauss.avi', fourcc, 5.0, (640, 480))
+while (cap.isOpened()):
+    success, frame = cap.read()
+    if success == False:
+        break    
+
+    # steps to find the probability of each pixel in the k-gaussians
+    img = np.reshape(frame, (frame.shape[0] * frame.shape[1], 3))
+    prob = np.zeros((frame.shape[0] * frame.shape[1], 6))
+    likelihood = np.zeros((frame.shape[0] * frame.shape[1], 6))
+    for index in range(0, 6):
+        prob[: ,index:index+1] = gaussian_estimation_3d(img, mean_gaussian[index], covariance_matrix_gaussian[index]) * weights_gaussian[index]
+        likelihood = prob.sum(1)
+    prob = np.reshape(likelihood, (frame.shape[0], frame.shape[1]))
+    prob[prob > np.max(prob) / 6.0] = 255
+    
+    # pre-process image and create a binary image
+    output_image = np.zeros_like(frame)
+    output_image[:, :, 0] = prob
+    output_image[:, :, 1] = prob
+    output_image[:, :, 2] = prob
+    gray_output_image = cv2.cvtColor(output_image, cv2.COLOR_BGR2GRAY)
+    output_image = cv2.GaussianBlur(gray_output_image, (3, 3), 4)
+    _, edged = cv2.threshold(output_image, 20, 255, 0)
+    
+    # find contours and segment the orange buoy
+    (cnts, _) = cv2.findContours(edged.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[-2:]
+    cnts, _ = sort_contours(cnts, method="right-to-left")
+    hull = cv2.convexHull(cnts[0])
+    (x, y), radius = cv2.minEnclosingCircle(hull)
+    if radius > 5:
+        cv2.circle(frame, (int(x), int(y)), int(radius), (0, 0, 255), 2)
+        out.write(frame)
+    else:
+        out.write(frame)

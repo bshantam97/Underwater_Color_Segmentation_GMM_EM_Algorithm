@@ -112,6 +112,18 @@ def gaussian_estimation_array(data_point, mean, covariance, dimension):
     return np.reshape(val, (data_point.shape[0], data_point.shape[1]))
 
 
+# gaussian estimation for 3-dimensional case
+def gaussian_estimation_3d(data_point, mean, cov):
+    det_cov = np.linalg.det(cov)
+    cov_inv = np.zeros_like(cov)
+    mean = np.array(mean)
+    cov = np.array(cov)
+    for i in range(data_point.shape[1]):
+        cov_inv[i, i] = 1 / cov[i, i]
+    diff = np.matrix(data_point - mean)
+    return (2.0 * np.pi) ** (-len(data_point[1]) / 2.0) * (1.0 / (np.linalg.det(cov) ** 0.5)) * np.exp(-0.5 * np.sum(np.multiply(diff * cov_inv, diff), axis=1))
+
+
 # e-step of the algorithm
 # reference: https://towardsdatascience.com/an-intuitive-guide-to-expected-maximation-em-algorithm-e1eb93648ce9
 def expectation_step(n, d, k, data, weights_gaussian, mean_gaussian, covariance_matrix_gaussian, probability_values):
@@ -272,7 +284,7 @@ def run_expectation_maximization_algorithm(n, d, k, iterations, data):
     """
     
     # initialise step
-    (weights_gaussian, mean_gaussian, covariance_matrix_gaussian, probability_values) = initialise_step(n, d, k, data)
+    (weights_gaussian, mean_gaussian, covariance_matrix_gaussian, probability_values) = initialise_step(n, d, k)
     
     # run for fixed iterations
     for i in range(0, iterations):
@@ -318,3 +330,19 @@ def get_training_data(file_path, channel1, channel2, channel3):
                     val.append(image[row, col, 2])
                 data.append(val)
     return np.array(data)
+
+
+# reference: https://www.pyimagesearch.com/2015/04/20/sorting-contours-using-python-and-opencv/
+def sort_contours(cnts, method="left-to-right"):
+    reverse = False
+    i = 0
+    if method == "right-to-left" or method == "bottom-to-top":
+        reverse = True
+        
+    if method == "top-to-bottom" or method == "bottom-to-top":
+        i = 1
+
+    boundingBoxes = [cv2.boundingRect(c) for c in cnts]
+    (cnts, boundingBoxes) = zip(*sorted(zip(cnts, boundingBoxes),
+        key=lambda b:b[1][i], reverse=reverse))
+    return (cnts, boundingBoxes)
