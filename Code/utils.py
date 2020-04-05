@@ -2,8 +2,8 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy
+import glob
 from scipy.stats import norm
-%matplotlib inline
 
 # initialise step of em algorithm
 def initialise_step(n, d, k):
@@ -80,6 +80,28 @@ def gaussian_estimation(data_point, mean, covariance, dimension):
     data_mean_diff = (data_point - mean)
     data_mean_diff_transpose = data_mean_diff.T     
     return (gaussian_pi_coeff) * (determinant_covariance_root) * np.exp(-0.5 * np.matmul(np.matmul(data_mean_diff, covariance_inverse), data_mean_diff_transpose))
+
+# gaussian estimation for n-points
+def gaussian_estimation_array(data_point, mean, covariance, dimension):
+    """
+    Inputs:
+    data_point - data point of the gaussian, size (n x d)
+    mean - mean of the gaussian, size (1 x d)
+    covariance - covariance of the gaussian, size (1 x d x d)
+    dimension - dimension of the gaussian
+    
+    Outputs:
+    value of the gaussian, size (n x d)
+    """
+
+    determinant_covariance = np.linalg.det(covariance)
+    determinant_covariance_root = np.sqrt(determinant_covariance)
+    covariance_inverse = np.linalg.inv(covariance)
+    gaussian_pi_coeff = 1.0 / np.power((2 * np.pi), (dimension / 2))
+    data_mean_diff = (data_point - mean)
+    data_mean_diff_transpose = data_mean_diff.T 
+    val = (gaussian_pi_coeff) * (determinant_covariance_root) * np.exp(-0.5 * np.sum(np.multiply(data_mean_diff * covariance_inverse, data_mean_diff), axis=1))
+    return np.reshape(val, (data_point.shape[0], data_point.shape[1]))
 
 # Perform the expectation step
 def expectation_step(n, d, k, data, weights_gaussian, mean_gaussian, covariance_matrix_gaussian):
