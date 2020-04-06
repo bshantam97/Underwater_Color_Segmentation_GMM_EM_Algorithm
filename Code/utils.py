@@ -81,6 +81,17 @@ def gaussian_estimation(data_point, mean, covariance, dimension):
     data_mean_diff_transpose = data_mean_diff.T     
     return (gaussian_pi_coeff) * (determinant_covariance_root) * np.exp(-0.5 * np.matmul(np.matmul(data_mean_diff, covariance_inverse), data_mean_diff_transpose))
 
+# gaussian estimation for 3-dimensional case
+def gaussian_estimation_3d(data_point, mean, cov):
+    det_cov = np.linalg.det(cov)
+    cov_inv = np.zeros_like(cov)
+    mean = np.array(mean)
+    cov = np.array(cov)
+    for i in range(data_point.shape[1]):
+        cov_inv[i, i] = 1 / cov[i, i]
+    diff = np.matrix(data_point - mean)
+    return (2.0 * np.pi) ** (-len(data_point[1]) / 2.0) * (1.0 / (np.linalg.det(cov) ** 0.5)) * np.exp(-0.5 * np.sum(np.multiply(diff * cov_inv, diff), axis=1))
+    
 # gaussian estimation for n-points
 def gaussian_estimation_array(data_point, mean, covariance, dimension):
     """
