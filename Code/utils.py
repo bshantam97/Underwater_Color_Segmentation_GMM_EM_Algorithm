@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy
 import glob
+from scipy.stats import multivariate_normal as mvn
 from scipy.stats import norm
 
 # initialise step of em algorithm
@@ -91,7 +92,7 @@ def gaussian_estimation_3d(data_point, mean, cov):
         cov_inv[i, i] = 1 / cov[i, i]
     diff = np.matrix(data_point - mean)
     return (2.0 * np.pi) ** (-len(data_point[1]) / 2.0) * (1.0 / (np.linalg.det(cov) ** 0.5)) * np.exp(-0.5 * np.sum(np.multiply(diff * cov_inv, diff), axis=1))
-    
+
 # gaussian estimation for n-points
 def gaussian_estimation_array(data_point, mean, covariance, dimension):
     """
@@ -201,6 +202,25 @@ def maximization_gaussian(data_probabilities, input_data, initial_mixture_coeff,
     
     return phi_k , mean_k , covariance
 
+def compute_log_likelihood(input_data, mixture_coeff, mean_gaussian, covariance_gaussian, K):
+    
+    """
+    Inputs
+    
+    mixture_coeff: Mixture coefficient is the probability of the kth gaussian of size (k)
+    mean_gaussian: the mean is the mean of the kth gaussian of size (kxd)
+    covariance_gaussian: Covariance of the Kth gaussian of size (kxdxd)
+    data - training data, size (n x d)
+    K: Number of Gaussians
+    
+    """
+    # We need to compute the log likelihood and do a test for convergence
+    n = input_data.shape[0]
+
+    log_likelihood =  np.log(np.sum(mixture_coeff[k]*mvn.pdf(input_data,mean_gaussian[k],covariance_gaussian[k]) for k in range(K)))
+        
+    return np.sum(log_likelihood)
+
 # run e-m algorithm
 def run_expectation_maximization_algorithm(n, d, k, iterations, data):
     """
@@ -229,6 +249,12 @@ def run_expectation_maximization_algorithm(n, d, k, iterations, data):
         # e-step
         probability_values = expectation_step(n, d, k, data, mixture_coeffs, mean_gaussian, covariance_matrix_gaussian)
             
+        # Loss Function( Test for convergence )
+        log_likelihood = compute_log_likelihood(data, weights_gaussian, mean_gaussian, covariance_matrix_gaussian,k)
+        
+        if i%10 == 0:
+            print(f' for iteration: {i} weights: {weights_gaussian} mean_gaussian: {mean_gaussian} covariance: {covariance_matrix_gaussian} loss: {log_likelihood}')
+
     # return answer
     return (weights_gaussian, mean_gaussian, covariance_matrix_gaussian)
 
