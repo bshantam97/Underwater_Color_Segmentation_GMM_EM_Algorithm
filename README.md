@@ -17,12 +17,12 @@ where, video_path and train_file_path are the paths for input video and training
 
 ```
 cd Code/
-python yellow_buoy_1D_gauss.py /home/arpitdec5/Desktop/color_segmentation_using_gmm_and_em/data/detectbuoy.avi /home/arpitdec5/Desktop/color_segmentation_using_gmm_and_em/data/buoy1/train
+python yellow_buoy_1D_gauss.py video_path
 ```
 
 ```
 cd Code/
-python orange_buoy_3D_gauss.py /home/arpitdec5/Desktop/color_segmentation_using_gmm_and_em/data/detectbuoy.avi /home/arpitdec5/Desktop/color_segmentation_using_gmm_and_em/data/buoy2/train
+python orange_buoy_3D_gauss.py video_path
 ```
 
 ### Software Required
